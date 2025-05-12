@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from data_processor import ExerciseDataProcessor
 from recommender import WorkoutRecommender
 
-st.title("AI Workout Recommender Demo")
+st.title("AI Workout Recommender 💪")
 
 st.write("""
 Upload a MetaMotion accelerometer CSV file, preview the data, set your preferences, and get workout recommendations based on your sensor data!
