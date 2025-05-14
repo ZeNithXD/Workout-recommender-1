@@ -1,5 +1,5 @@
 """
-AI Workout Recommender - Source Package
+AI Workout Recommender package
 """
 
 __version__ = "0.1.0" 
