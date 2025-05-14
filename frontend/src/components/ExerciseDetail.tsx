@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
@@ -26,6 +26,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import Button from '@mui/material/Button';
 
 interface ExerciseData {
   timestamp: string;
@@ -321,7 +322,7 @@ const exerciseInfoMap: Record<string, ExerciseInfo> = {
       ]
     }
   },
-  barbell_row: {
+  Row: {
     description: "Barbell rows are a compound exercise that targets the back, biceps, and forearms.",
     instructions: [
       "Stand with feet hip-width apart, barbell in front.",
@@ -610,11 +611,164 @@ const exerciseInfoMap: Record<string, ExerciseInfo> = {
         "Use as a warm-up or cardio finisher."
       ]
     }
+  },  
+ 
+  bicycle_crunch: {
+    description: "Bicycle crunches engage the entire core, especially the obliques and rectus abdominis.",
+    instructions: [
+      "Lie flat on your back with hands behind your head.",
+      "Lift your legs off the floor and bend your knees at a 90-degree angle.",
+      "Bring your right elbow to your left knee while extending the right leg.",
+      "Switch sides in a pedaling motion.",
+      "Continue alternating sides for the desired reps."
+    ],
+    guidelines: {
+      sets: "3 sets",
+      reps: "20-30 reps (10-15 per side)",
+      rest: "45 seconds between sets",
+      tips: [
+        "Do not pull on your neck.",
+        "Engage your core with each rep.",
+        "Move with control, not speed.",
+        "Keep your lower back pressed to the ground."
+      ]
+    }
+  },
+  
+  hanging_knee_raise: {
+    description: "Hanging knee raises target the lower abs and help improve grip strength and hip flexor activation.",
+    instructions: [
+      "Hang from a pull-up bar with arms fully extended.",
+      "Engage your core and raise your knees toward your chest.",
+      "Pause at the top, then lower your legs back down with control.",
+      "Repeat for the desired number of reps."
+    ],
+    guidelines: {
+      sets: "3 sets",
+      reps: "10-15 reps",
+      rest: "60 seconds between sets",
+      tips: [
+        "Avoid swinging or using momentum.",
+        "Keep the movement controlled.",
+        "Engage your core throughout.",
+        "Exhale as you lift your knees."
+      ]
+    }
+  },
+  v_up: {
+    description: "V-ups are a core exercise that works both upper and lower abs simultaneously.",
+    instructions: [
+      "Lie flat on your back with arms extended overhead and legs straight.",
+      "Lift your legs and upper body at the same time to form a V shape.",
+      "Reach your hands toward your toes.",
+      "Lower back down with control.",
+      "Repeat for the desired number of reps."
+    ],
+    guidelines: {
+      sets: "3 sets",
+      reps: "12-20 reps",
+      rest: "45-60 seconds between sets",
+      tips: [
+        "Keep your legs and arms straight during the movement.",
+        "Engage your core throughout.",
+        "Avoid jerking or fast motions.",
+        "Exhale during the upward movement."
+      ]
+    }
+  },
+  side_plank: {
+    description: "The side plank is an isometric core exercise that targets the obliques and improves stability.",
+    instructions: [
+      "Lie on your side with legs stacked and forearm on the ground.",
+      "Lift your hips off the ground to form a straight line from head to feet.",
+      "Hold the position, engaging your core.",
+      "Repeat on the other side."
+    ],
+    guidelines: {
+      sets: "3 sets per side",
+      reps: "Hold for 30-60 seconds",
+      rest: "30 seconds between sides",
+      tips: [
+        "Keep your hips lifted and body straight.",
+        "Don’t let your shoulder collapse.",
+        "Breathe steadily throughout.",
+        "For progression, raise the top leg or arm."
+      ]
+    }
+  },
+  toe_touch: {
+    description: "Toe touches are a simple but effective ab exercise that targets the upper abdominal muscles.",
+    instructions: [
+      "Lie on your back with legs straight and lifted toward the ceiling.",
+      "Reach your hands toward your toes while lifting your shoulder blades off the ground.",
+      "Lower back down with control.",
+      "Repeat for the desired number of reps."
+    ],
+    guidelines: {
+      sets: "3 sets",
+      reps: "15-25 reps",
+      rest: "30-45 seconds between sets",
+      tips: [
+        "Focus on using your abs, not your neck.",
+        "Exhale as you reach up.",
+        "Keep legs as straight as possible.",
+        "Move in a slow, controlled manner."
+      ]
+    }
+  },
+  flutter_kick: {
+    description: "Flutter kicks strengthen the lower abs and hip flexors while improving endurance and core stability.",
+    instructions: [
+      "Lie on your back with legs extended and hands under your glutes.",
+      "Lift both legs a few inches off the ground.",
+      "Alternate kicking your legs up and down in a fluttering motion.",
+      "Keep your core tight throughout the movement."
+    ],
+    guidelines: {
+      sets: "3 sets",
+      reps: "20-40 kicks (10-20 per leg)",
+      rest: "30-45 seconds between sets",
+      tips: [
+        "Keep lower back pressed to the floor.",
+        "Don't hold your breath.",
+        "Keep legs straight and movements small.",
+        "Avoid arching your back."
+      ]
+    }
   }
+
 };
+
+function getExerciseInfo(exerciseName: string): ExerciseInfo {
+  return (
+    exerciseInfoMap[exerciseName] ||
+    {
+      description: "This is a great exercise for building strength and fitness.",
+      instructions: [
+        "Start in the recommended position for this exercise.",
+        "Perform the movement with good form and control.",
+        "Repeat for the desired number of repetitions.",
+        "Focus on breathing and proper technique."
+      ],
+      guidelines: {
+        sets: "3-4 sets",
+        reps: "10-15 reps",
+        rest: "60-90 seconds between sets",
+        tips: [
+          "Maintain good posture throughout.",
+          "Use a full range of motion.",
+          "Start with a light weight or easier variation if needed.",
+          "Progress gradually as you get stronger."
+        ]
+      }
+    }
+  );
+}
 
 const ExerciseDetail = () => {
   const { exerciseName } = useParams<{ exerciseName: string }>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [exerciseData, setExerciseData] = useState<ExerciseData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -654,19 +808,22 @@ const ExerciseDetail = () => {
     );
   }
 
-  const exerciseInfo = exerciseInfoMap[exerciseName || ''] || {
-    description: "Exercise information not available",
-    instructions: [],
-    guidelines: {
-      sets: "N/A",
-      reps: "N/A",
-      rest: "N/A",
-      tips: []
-    }
-  };
+  const exerciseInfo = getExerciseInfo(exerciseName || '');
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Box sx={{ mb: 3 }}>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            const category = searchParams.get('category');
+            navigate(category ? `/?category=${category}` : '/');
+          }}
+        >
+          Back to Exercise List
+        </Button>
+      </Box>
+      
       <Typography variant="h4" component="h1" gutterBottom>
         {exerciseName?.split('_').map(word => 
           word.charAt(0).toUpperCase() + word.slice(1)

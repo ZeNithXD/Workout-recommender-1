@@ -1,5 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing import List, Optional
 import pandas as pd
@@ -7,13 +10,16 @@ from pathlib import Path
 import re
 from .data_processor import ExerciseDataProcessor
 from .recommender import WorkoutRecommender
+import json
+import os
+from datetime import datetime, timedelta
 
 app = FastAPI()
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -140,4 +146,130 @@ async def get_recommendations(profile: UserProfile):
         experience=profile.experience,
         medical_conditions=profile.medical_conditions
     )
-    return recommendations 
+    return recommendations
+
+# Create data directory if it doesn't exist
+DATA_DIR = Path("data")
+PROFILE_FILE = DATA_DIR / "user_profile.json"
+
+# Ensure data directory exists
+DATA_DIR.mkdir(exist_ok=True)
+
+@app.post("/api/profile")
+async def save_profile(profile: UserProfile):
+    try:
+        # Save profile data to file
+        with open(PROFILE_FILE, 'w') as f:
+            json.dump(profile.dict(), f)
+        return {"message": "Profile saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/profile")
+async def get_profile():
+    try:
+        if PROFILE_FILE.exists():
+            with open(PROFILE_FILE, 'r') as f:
+                profile_data = json.load(f)
+            return profile_data
+        else:
+            raise HTTPException(status_code=404, detail="No profile found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+SECRET_KEY = "your-secret-key"  # Change this in production!
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+USERS_FILE = Path("data/users.json")
+USERS_FILE.parent.mkdir(exist_ok=True)
+
+def load_users():
+    if USERS_FILE.exists():
+        with open(USERS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_users(users):
+    with open(USERS_FILE, "w") as f:
+        json.dump(users, f)
+
+class User(BaseModel):
+    username: str
+    password: str
+
+class Profile(BaseModel):
+    weight: float
+    height: float
+    age: int
+    gender: str
+    goals: List[str]
+    experience: str
+    medical_conditions: Optional[str] = None
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_password(plain, hashed):
+    return pwd_context.verify(plain, hashed)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        users = load_users()
+        if username not in users:
+            raise HTTPException(status_code=401, detail="User not found")
+        return username
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+@app.post("/api/signup")
+def signup(user: User):
+    users = load_users()
+    if user.username in users:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    users[user.username] = {
+        "password": get_password_hash(user.password),
+        "profile": None
+    }
+    save_users(users)
+    return {"message": "User created successfully"}
+
+@app.post("/api/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    users = load_users()
+    user = users.get(form_data.username)
+    if not user or not verify_password(form_data.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    access_token = create_access_token(data={"sub": form_data.username}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/profile")
+def get_profile(current_user: str = Depends(get_current_user)):
+    users = load_users()
+    profile = users[current_user].get("profile")
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
+
+@app.post("/api/profile")
+def set_profile(profile: Profile, current_user: str = Depends(get_current_user)):
+    users = load_users()
+    users[current_user]["profile"] = profile.dict()
+    save_users(users)
+    return {"message": "Profile saved successfully"}
+
+if __name__ == '__main__':
+    app.run(debug=True) 

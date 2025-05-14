@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -13,6 +13,9 @@ import Chip from '@mui/material/Chip';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useNavigate } from 'react-router-dom';
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import { useAuth } from '../context/AuthContext';
 
 const goals = [
   'Weight Loss',
@@ -26,6 +29,7 @@ const experienceLevels = ['Beginner', 'Intermediate', 'Advanced'];
 
 const UserProfile = () => {
   const navigate = useNavigate();
+  const { token, logout } = useAuth();
   const [formData, setFormData] = useState({
     weight: '',
     height: '',
@@ -35,6 +39,34 @@ const UserProfile = () => {
     experience: '',
     medical_conditions: '',
   });
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error'
+  });
+
+  useEffect(() => {
+    // Load existing profile data if available
+    const loadProfile = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFormData({
+            ...data,
+            weight: data.weight?.toString() || '',
+            height: data.height?.toString() || '',
+            age: data.age?.toString() || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+    if (token) loadProfile();
+  }, [token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -64,28 +96,95 @@ const UserProfile = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (
+      !formData.weight ||
+      !formData.height ||
+      !formData.age ||
+      !formData.gender ||
+      !formData.goals.length ||
+      !formData.experience
+    ) {
+      setNotification({
+        open: true,
+        message: 'Please fill in all required fields.',
+        severity: 'error'
+      });
+      return;
+    }
     try {
-      const response = await fetch('http://localhost:8000/api/recommendations', {
+      const payload = {
+        ...formData,
+        weight: parseFloat(formData.weight),
+        height: parseFloat(formData.height),
+        age: parseInt(formData.age),
+      };
+      console.log('Profile payload:', payload);
+      const profileResponse = await fetch('http://localhost:8000/api/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...formData,
-          weight: parseFloat(formData.weight),
-          height: parseFloat(formData.height),
-          age: parseInt(formData.age),
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (response.ok) {
-        navigate('/recommendations');
-      } else {
-        console.error('Failed to save profile');
+      if (!profileResponse.ok) {
+        let errorMsg = 'Failed to save profile';
+        try {
+          const errorData = await profileResponse.json();
+          errorMsg = errorData.detail || errorMsg;
+        } catch {}
+        setNotification({
+          open: true,
+          message: errorMsg,
+          severity: 'error'
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Error saving profile:', error);
+
+      // Then get recommendations
+      const recommendationsResponse = await fetch('http://localhost:8000/api/recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (recommendationsResponse.ok) {
+        setNotification({
+          open: true,
+          message: 'Profile saved successfully!',
+          severity: 'success'
+        });
+        setTimeout(() => {
+          navigate('/recommendations');
+        }, 2000);
+      } else {
+        let errorMsg = 'Failed to get recommendations';
+        try {
+          const errorData = await recommendationsResponse.json();
+          errorMsg = errorData.detail || errorMsg;
+        } catch {}
+        setNotification({
+          open: true,
+          message: errorMsg,
+          severity: 'error'
+        });
+      }
+    } catch (error: any) {
+      console.error('Error:', error);
+      setNotification({
+        open: true,
+        message: error.message || 'Failed to save profile. Please try again.',
+        severity: 'error'
+      });
     }
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   return (
@@ -196,6 +295,20 @@ const UserProfile = () => {
           </Box>
         </form>
       </Paper>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
