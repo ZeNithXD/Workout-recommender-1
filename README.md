@@ -1,46 +1,74 @@
-# AI Workout Recommender
+# Fitness Web App
 
-This project uses artificial intelligence to recommend personalized workout routines based on user data and exercise information.
+A modern, interactive fitness web application that provides personalized workout and nutrition recommendations, an exercise library, AI chatbot, weather widget, and more.
+
+## Features
+
+- **Authentication**: Secure login/signup with JWT (FastAPI backend, React frontend)
+- **User Profile**: Enter your weight, height, age, gender, goals, experience, and medical conditions
+- **Personalized Recommendations**: Get a one-week plan with daily exercises and Indian meal suggestions, tailored to your profile and goals
+- **Exercise Library**: Browse exercises by category and view detailed instructions
+- **AI Chatbot**: Floating chatbot for fitness Q&A (rule-based, no external API required)
+- **Weather Widget**: See real-time weather and time in the app
+- **Modern UI/UX**: Beautiful, responsive design with Material-UI, glassmorphism, and animated buttons
+- **Local Profile Storage**: Your profile is saved in your browser for seamless experience
 
 ## Project Structure
 
 ```
 AI/
-├── data/
-│   ├── raw/          # Original, immutable data
-│   ├── processed/    # Cleaned and processed data
-│   ├── interim/      # Intermediate data
-│   └── external/     # External data sources
-├── src/              # Source code
-├── notebooks/        # Jupyter notebooks
-├── models/           # Trained models
-└── requirements.txt  # Project dependencies
+├── backend/                # FastAPI backend (authentication, recommendations API)
+├── frontend/               # React frontend (user interface)
+│   ├── src/components/     # React components
+│   ├── src/data/           # Exercise and meal data
+│   └── ...
+├── data/                   # (Optional) Data for ML/AI
+└── README.md               # This file
 ```
 
-## Setup
+## Setup Instructions
 
-1. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+### Backend (FastAPI)
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Create a virtual environment and activate it:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the FastAPI server:
+   ```bash
+   uvicorn main:app --reload
+   ```
 
+### Frontend (React)
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
 2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   npm install
+   ```
+3. Start the React app:
+   ```bash
+   npm start
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Data
-
-The project uses exercise data stored in the `data/raw` directory. The data is organized into different categories for raw, processed, and intermediate data.
-
-## Features
-
-- Exercise recommendation based on user preferences
-- Personalized workout plans
-- Exercise difficulty classification
-- Workout intensity optimization
+## Usage
+- Sign up or log in
+- Complete your profile
+- Get personalized recommendations for workouts and Indian meals
+- Explore the exercise library
+- Chat with the AI assistant
+- Check the weather and time
 
 ## Contributing
-
-Feel free to contribute to this project by submitting issues or pull requests. 
+Pull requests and suggestions are welcome! 
