@@ -1,12 +1,14 @@
-interface Exercise {
+export interface Exercise {
   name: string;
   sets: number;
   reps: string;
   rest: string;
   description: string;
+  type: 'bodyweight' | 'gym' | 'boxing';
+  level: 'beginner' | 'intermediate' | 'advanced';
 }
 
-interface Meal {
+export interface Meal {
   name: string;
   calories: number;
   protein: number;
@@ -14,6 +16,7 @@ interface Meal {
   fats: number;
   ingredients: string[];
   instructions: string;
+  veg: boolean;
 }
 
 interface DailyMeals {
@@ -1046,57 +1049,133 @@ export const indianMealPlans = {
   }
 };
 
-export const generateWeeklyPlan = (goal: string, experience: string, weight: number, height: number): WeeklyPlan => {
-  const exercisesLib = exerciseLibrary[goal as keyof typeof exerciseLibrary];
-  const mealsLib = indianMealPlans[goal as keyof typeof indianMealPlans];
-  if (!exercisesLib) {
-    throw new Error(`No exercise plan found for goal: ${goal}`);
-  }
-  let exercises = exercisesLib[experience as keyof typeof exercisesLib];
-  // Fallback: if experience is 'advanced' and not present, use intermediate
-  if (!exercises && experience === 'advanced') {
-    exercises = exercisesLib['intermediate'];
-  }
-  if (!exercises) {
-    throw new Error(`No exercise plan found for experience: ${experience}`);
-  }
-  if (!mealsLib) {
-    throw new Error(`No meal plan found for goal: ${goal}`);
+// Large pool of exercises (add more as needed)
+export const exercisePool: Exercise[] = [
+  // Bodyweight
+  { name: 'Push-ups', sets: 3, reps: '12-15', rest: '60s', description: 'Standard push-ups', type: 'bodyweight', level: 'beginner' },
+  { name: 'Squats', sets: 3, reps: '15-20', rest: '60s', description: 'Bodyweight squats', type: 'bodyweight', level: 'beginner' },
+  { name: 'Lunges', sets: 3, reps: '12 each leg', rest: '60s', description: 'Alternating lunges', type: 'bodyweight', level: 'beginner' },
+  { name: 'Plank', sets: 3, reps: '30s', rest: '60s', description: 'Core strengthening', type: 'bodyweight', level: 'beginner' },
+  { name: 'Burpees', sets: 3, reps: '10-12', rest: '60s', description: 'Full body movement', type: 'bodyweight', level: 'intermediate' },
+  { name: 'Mountain Climbers', sets: 3, reps: '30s', rest: '30s', description: 'Core and cardio', type: 'bodyweight', level: 'intermediate' },
+  { name: 'Triceps Dips', sets: 3, reps: '12-15', rest: '60s', description: 'Chair dips', type: 'bodyweight', level: 'beginner' },
+  { name: 'Glute Bridges', sets: 3, reps: '15', rest: '60s', description: 'Hip bridges', type: 'bodyweight', level: 'beginner' },
+  { name: 'Superman', sets: 3, reps: '12', rest: '60s', description: 'Back strengthening', type: 'bodyweight', level: 'beginner' },
+  { name: 'Russian Twists', sets: 3, reps: '20', rest: '60s', description: 'Core rotation', type: 'bodyweight', level: 'intermediate' },
+  { name: 'Jumping Jacks', sets: 3, reps: '30s', rest: '30s', description: 'Cardio warmup', type: 'bodyweight', level: 'beginner' },
+  { name: 'Wall Sit', sets: 3, reps: '45s', rest: '60s', description: 'Isometric leg hold', type: 'bodyweight', level: 'beginner' },
+  { name: 'High Knees', sets: 3, reps: '30s', rest: '30s', description: 'Cardio', type: 'bodyweight', level: 'intermediate' },
+  { name: 'Side Plank', sets: 3, reps: '30s each side', rest: '60s', description: 'Oblique/core', type: 'bodyweight', level: 'intermediate' },
+  { name: 'Bicycle Crunches', sets: 3, reps: '20', rest: '60s', description: 'Core', type: 'bodyweight', level: 'intermediate' },
+  { name: 'Step-ups', sets: 3, reps: '12 each leg', rest: '60s', description: 'Step on platform', type: 'bodyweight', level: 'beginner' },
+  { name: 'Bear Crawl', sets: 3, reps: '30s', rest: '60s', description: 'Full body', type: 'bodyweight', level: 'intermediate' },
+  { name: 'Reverse Crunch', sets: 3, reps: '15', rest: '60s', description: 'Lower abs', type: 'bodyweight', level: 'beginner' },
+  { name: 'Standing Calf Raise', sets: 3, reps: '20', rest: '60s', description: 'Calves', type: 'bodyweight', level: 'beginner' },
+  // Gym
+  { name: 'Bench Press', sets: 4, reps: '8-12', rest: '90s', description: 'Barbell bench press', type: 'gym', level: 'intermediate' },
+  { name: 'Incline Dumbbell Press', sets: 4, reps: '8-12', rest: '90s', description: 'Chest', type: 'gym', level: 'intermediate' },
+  { name: 'Deadlift', sets: 4, reps: '6-10', rest: '120s', description: 'Barbell deadlift', type: 'gym', level: 'advanced' },
+  { name: 'Lat Pulldown', sets: 3, reps: '10-12', rest: '60s', description: 'Back exercise', type: 'gym', level: 'beginner' },
+  { name: 'Seated Row', sets: 3, reps: '10-12', rest: '60s', description: 'Back', type: 'gym', level: 'intermediate' },
+  { name: 'Barbell Curl', sets: 3, reps: '10-12', rest: '60s', description: 'Biceps', type: 'gym', level: 'beginner' },
+  { name: 'Triceps Pushdown', sets: 3, reps: '10-12', rest: '60s', description: 'Triceps', type: 'gym', level: 'beginner' },
+  { name: 'Leg Press', sets: 4, reps: '10-15', rest: '90s', description: 'Legs', type: 'gym', level: 'intermediate' },
+  { name: 'Leg Extension', sets: 3, reps: '12-15', rest: '60s', description: 'Quads', type: 'gym', level: 'beginner' },
+  { name: 'Leg Curl', sets: 3, reps: '12-15', rest: '60s', description: 'Hamstrings', type: 'gym', level: 'beginner' },
+  { name: 'Shoulder Press', sets: 3, reps: '10-12', rest: '60s', description: 'Shoulders', type: 'gym', level: 'intermediate' },
+  { name: 'Cable Fly', sets: 3, reps: '12-15', rest: '60s', description: 'Chest', type: 'gym', level: 'intermediate' },
+  { name: 'Dumbbell Lateral Raise', sets: 3, reps: '12-15', rest: '60s', description: 'Shoulders', type: 'gym', level: 'intermediate' },
+  { name: 'Dumbbell Shrug', sets: 3, reps: '12-15', rest: '60s', description: 'Traps', type: 'gym', level: 'intermediate' },
+  { name: 'Smith Machine Squat', sets: 4, reps: '10-15', rest: '90s', description: 'Legs', type: 'gym', level: 'advanced' },
+  { name: 'Hack Squat', sets: 4, reps: '10-15', rest: '90s', description: 'Legs', type: 'gym', level: 'advanced' },
+  { name: 'Preacher Curl', sets: 3, reps: '10-12', rest: '60s', description: 'Biceps', type: 'gym', level: 'intermediate' },
+  { name: 'Triceps Overhead Extension', sets: 3, reps: '10-12', rest: '60s', description: 'Triceps', type: 'gym', level: 'intermediate' },
+  { name: 'Standing Calf Raise (Machine)', sets: 3, reps: '15-20', rest: '60s', description: 'Calves', type: 'gym', level: 'beginner' },
+  // Boxing
+  { name: 'Shadow Boxing', sets: 4, reps: '3 min', rest: '1 min', description: 'Boxing technique practice', type: 'boxing', level: 'beginner' },
+  { name: 'Heavy Bag', sets: 5, reps: '2 min', rest: '1 min', description: 'Punching bag workout', type: 'boxing', level: 'intermediate' },
+  { name: 'Speed Bag', sets: 4, reps: '2 min', rest: '1 min', description: 'Hand speed and coordination', type: 'boxing', level: 'intermediate' },
+  { name: 'Double End Bag', sets: 4, reps: '2 min', rest: '1 min', description: 'Accuracy and rhythm', type: 'boxing', level: 'intermediate' },
+  { name: 'Box Jumps', sets: 3, reps: '10', rest: '60s', description: 'Explosive power', type: 'boxing', level: 'intermediate' },
+  { name: 'Jump Rope', sets: 5, reps: '2 min', rest: '1 min', description: 'Cardio and footwork', type: 'boxing', level: 'beginner' },
+  { name: 'Focus Mitts', sets: 4, reps: '3 min', rest: '1 min', description: 'Pad work with partner', type: 'boxing', level: 'intermediate' },
+  { name: 'Defensive Drills', sets: 4, reps: '3 min', rest: '1 min', description: 'Slips, rolls, blocks', type: 'boxing', level: 'intermediate' },
+  // ... (add more to reach 200)
+];
+
+// Large pool of Indian meals (add more as needed)
+export const mealPool: Meal[] = [
+  // Veg
+  { name: 'Paneer Tikka', calories: 320, protein: 18, carbs: 12, fats: 20, ingredients: ['Paneer', 'Spices', 'Yogurt'], instructions: 'Grill marinated paneer cubes.', veg: true },
+  { name: 'Chana Masala', calories: 280, protein: 12, carbs: 40, fats: 6, ingredients: ['Chickpeas', 'Tomato', 'Spices'], instructions: 'Cook chickpeas with tomato and spices.', veg: true },
+  { name: 'Masoor Dal', calories: 220, protein: 14, carbs: 30, fats: 3, ingredients: ['Red lentils', 'Spices'], instructions: 'Boil dal and temper with spices.', veg: true },
+  { name: 'Aloo Gobi', calories: 210, protein: 5, carbs: 35, fats: 7, ingredients: ['Potato', 'Cauliflower', 'Spices'], instructions: 'Cook potato and cauliflower with spices.', veg: true },
+  { name: 'Rajma', calories: 250, protein: 10, carbs: 40, fats: 4, ingredients: ['Kidney beans', 'Spices', 'Tomato'], instructions: 'Cook kidney beans in tomato gravy.', veg: true },
+  { name: 'Palak Paneer', calories: 300, protein: 16, carbs: 14, fats: 18, ingredients: ['Spinach', 'Paneer', 'Spices'], instructions: 'Cook paneer in spinach gravy.', veg: true },
+  { name: 'Vegetable Biryani', calories: 350, protein: 8, carbs: 60, fats: 8, ingredients: ['Rice', 'Vegetables', 'Spices'], instructions: 'Cook rice with mixed vegetables and spices.', veg: true },
+  { name: 'Dhokla', calories: 180, protein: 7, carbs: 30, fats: 3, ingredients: ['Gram flour', 'Spices', 'Yogurt'], instructions: 'Steam gram flour batter.', veg: true },
+  { name: 'Idli Sambar', calories: 220, protein: 8, carbs: 40, fats: 2, ingredients: ['Rice', 'Lentils', 'Spices'], instructions: 'Steam idli and serve with sambar.', veg: true },
+  { name: 'Upma', calories: 200, protein: 6, carbs: 35, fats: 4, ingredients: ['Semolina', 'Vegetables', 'Spices'], instructions: 'Cook semolina with vegetables.', veg: true },
+  { name: 'Poha', calories: 210, protein: 5, carbs: 38, fats: 5, ingredients: ['Flattened rice', 'Vegetables', 'Spices'], instructions: 'Cook poha with vegetables.', veg: true },
+  { name: 'Bhindi Masala', calories: 180, protein: 4, carbs: 20, fats: 8, ingredients: ['Okra', 'Spices', 'Onion'], instructions: 'Cook okra with onion and spices.', veg: true },
+  { name: 'Baingan Bharta', calories: 170, protein: 4, carbs: 18, fats: 7, ingredients: ['Eggplant', 'Spices', 'Onion'], instructions: 'Roast and mash eggplant with spices.', veg: true },
+  { name: 'Kadhi', calories: 160, protein: 6, carbs: 20, fats: 6, ingredients: ['Yogurt', 'Gram flour', 'Spices'], instructions: 'Cook yogurt and gram flour with spices.', veg: true },
+  { name: 'Moong Dal', calories: 200, protein: 12, carbs: 28, fats: 3, ingredients: ['Moong dal', 'Spices'], instructions: 'Boil moong dal and temper with spices.', veg: true },
+  // Non-Veg
+  { name: 'Chicken Curry', calories: 400, protein: 30, carbs: 10, fats: 22, ingredients: ['Chicken', 'Spices', 'Yogurt'], instructions: 'Cook chicken with spices and yogurt.', veg: false },
+  { name: 'Fish Fry', calories: 350, protein: 28, carbs: 8, fats: 18, ingredients: ['Fish', 'Spices', 'Oil'], instructions: 'Shallow fry marinated fish.', veg: false },
+  { name: 'Egg Curry', calories: 300, protein: 16, carbs: 8, fats: 18, ingredients: ['Eggs', 'Spices', 'Tomato'], instructions: 'Cook boiled eggs in tomato gravy.', veg: false },
+  { name: 'Mutton Rogan Josh', calories: 450, protein: 28, carbs: 12, fats: 30, ingredients: ['Mutton', 'Spices', 'Yogurt'], instructions: 'Cook mutton with spices and yogurt.', veg: false },
+  { name: 'Prawn Masala', calories: 320, protein: 22, carbs: 6, fats: 16, ingredients: ['Prawns', 'Spices', 'Onion'], instructions: 'Cook prawns with onion and spices.', veg: false },
+  { name: 'Chicken Biryani', calories: 500, protein: 28, carbs: 60, fats: 18, ingredients: ['Chicken', 'Rice', 'Spices'], instructions: 'Cook chicken and rice with spices.', veg: false },
+  { name: 'Fish Curry', calories: 340, protein: 24, carbs: 10, fats: 14, ingredients: ['Fish', 'Spices', 'Coconut milk'], instructions: 'Cook fish in coconut milk and spices.', veg: false },
+  { name: 'Keema', calories: 420, protein: 25, carbs: 8, fats: 28, ingredients: ['Minced meat', 'Spices', 'Onion'], instructions: 'Cook minced meat with onion and spices.', veg: false },
+  { name: 'Egg Bhurji', calories: 250, protein: 14, carbs: 6, fats: 16, ingredients: ['Eggs', 'Onion', 'Spices'], instructions: 'Scramble eggs with onion and spices.', veg: false },
+  { name: 'Butter Chicken', calories: 480, protein: 26, carbs: 14, fats: 28, ingredients: ['Chicken', 'Butter', 'Tomato'], instructions: 'Cook chicken in butter and tomato gravy.', veg: false },
+  { name: 'Tandoori Chicken', calories: 350, protein: 30, carbs: 6, fats: 14, ingredients: ['Chicken', 'Spices', 'Yogurt'], instructions: 'Grill marinated chicken.', veg: false },
+  { name: 'Fish Tikka', calories: 300, protein: 22, carbs: 4, fats: 12, ingredients: ['Fish', 'Spices', 'Yogurt'], instructions: 'Grill marinated fish.', veg: false },
+  { name: 'Chicken Korma', calories: 420, protein: 24, carbs: 12, fats: 26, ingredients: ['Chicken', 'Spices', 'Cream'], instructions: 'Cook chicken in creamy sauce.', veg: false },
+  { name: 'Egg Paratha', calories: 320, protein: 12, carbs: 38, fats: 12, ingredients: ['Eggs', 'Wheat flour', 'Spices'], instructions: 'Stuff paratha with egg mixture.', veg: false },
+  // ... (add more to reach 200)
+];
+
+// Utility to get random unique items from an array
+function getRandomUnique<T>(arr: T[], count: number): T[] {
+  const shuffled = arr.slice().sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+// New generateWeeklyPlan: randomizes each day
+export const generateWeeklyPlan = (
+  goal: string,
+  experience: string,
+  weight: number,
+  height: number,
+  options?: { vegOnly?: boolean }
+) => {
+  // Filter exercises by level and type (bodyweight, gym, boxing)
+  const level = experience === 'advanced' ? 'intermediate' : experience;
+  const exercisesFiltered = exercisePool.filter(e => e.level === level);
+  // For demo, mix all types; you can filter by user preference if needed
+
+  // Filter meals by veg/non-veg
+  let mealsFiltered = mealPool;
+  if (options?.vegOnly) {
+    mealsFiltered = mealPool.filter(m => m.veg);
   }
 
-  // Calculate daily calorie needs based on weight, height, and goal
-  const bmr = 10 * weight + 6.25 * height - 5 * 30 + 5; // Basic BMR calculation
-  const tdee = bmr * 1.55; // Moderate activity level
-  const targetCalories = goal === 'weightLoss' ? tdee - 500 : tdee + 500;
-
-  return {
-    monday: {
-      exercises: exercises.monday,
-      meals: mealsLib.monday
-    },
-    tuesday: {
-      exercises: exercises.tuesday,
-      meals: mealsLib.tuesday
-    },
-    wednesday: {
-      exercises: exercises.wednesday,
-      meals: mealsLib.wednesday
-    },
-    thursday: {
-      exercises: exercises.thursday,
-      meals: mealsLib.thursday
-    },
-    friday: {
-      exercises: exercises.friday,
-      meals: mealsLib.friday
-    },
-    saturday: {
-      exercises: exercises.saturday,
-      meals: mealsLib.saturday
-    },
-    sunday: {
-      exercises: exercises.sunday,
-      meals: mealsLib.sunday
-    }
-  };
+  // For each day, pick 3 random exercises and 1 random meal for breakfast, lunch, dinner
+  const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const plan: any = {};
+  days.forEach(day => {
+    plan[day] = {
+      exercises: getRandomUnique(exercisesFiltered, 3),
+      meals: {
+        breakfast: getRandomUnique(mealsFiltered, 1)[0],
+        lunch: getRandomUnique(mealsFiltered, 1)[0],
+        dinner: getRandomUnique(mealsFiltered, 1)[0],
+      }
+    };
+  });
+  return plan;
 }; 

@@ -12,6 +12,9 @@ import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
+import Fade from '@mui/material/Fade';
+import PageContainer from '../theme/PageContainer';
+import StyledCard from '../theme/StyledCard';
 
 interface ExerciseCategory {
   [key: string]: string[];
@@ -32,6 +35,15 @@ const ExerciseList = () => {
     ? categoryNames.indexOf(categoryParam)
     : 0;
   const [selectedCategory, setSelectedCategory] = useState(initialCategoryIndex);
+
+  const categoryIcons: { [key: string]: string } = {
+    'UPPER BODY': '💪',
+    'LOWER BODY': '🦵',
+    'CORE': '🧘',
+    'FULL BODY': '🏋️',
+    'BOXING': '🥊',
+    // Add more as needed
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,38 +93,88 @@ const ExerciseList = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress />
-      </Box>
+      <PageContainer>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
+        </Box>
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <PageContainer>
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
-      </Container>
+      </PageContainer>
     );
   }
 
   if (!categories || Object.keys(categories).length === 0) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <PageContainer>
         <Alert severity="info">
           No exercise categories available.
         </Alert>
-      </Container>
+      </PageContainer>
     );
   }
 
   if (exercises.length === 0) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <PageContainer>
+        <Card
+          sx={{
+            mb: 4,
+            borderRadius: 5,
+            boxShadow: 8,
+            background: 'rgba(255,255,255,0.45)',
+            backdropFilter: 'blur(8px)',
+            p: { xs: 2, sm: 4 },
+            pt: 3,
+          }}
+        >
+          <Typography variant="h4" component="h1" gutterBottom>
+            Exercise Library
+          </Typography>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              {categoryNames.map((category, index) => (
+                <Tab key={category} label={category} />
+              ))}
+            </Tabs>
+          </Box>
+        </Card>
+        <Alert severity="info">
+          No exercises found in this category.
+        </Alert>
+      </PageContainer>
+    );
+  }
+
+  return (
+    <PageContainer>
+      <Card
+        sx={{
+          mb: 4,
+          borderRadius: 5,
+          boxShadow: 8,
+          background: 'rgba(255,255,255,0.45)',
+          backdropFilter: 'blur(8px)',
+          p: { xs: 2, sm: 4 },
+          pt: 3,
+        }}
+      >
         <Typography variant="h4" component="h1" gutterBottom>
           Exercise Library
         </Typography>
+
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs
             value={selectedCategory}
@@ -125,63 +187,28 @@ const ExerciseList = () => {
             ))}
           </Tabs>
         </Box>
-        <Alert severity="info">
-          No exercises found in this category.
-        </Alert>
-      </Container>
-    );
-  }
-
-  return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Exercise Library
-      </Typography>
-
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          {categoryNames.map((category, index) => (
-            <Tab key={category} label={category} />
-          ))}
-        </Tabs>
-      </Box>
+      </Card>
 
       <Grid container spacing={3}>
         {exercises.map((exercise) => {
           const isAvailable = availableExercises.includes(exercise);
+          const icon = categoryIcons[currentCategory?.toUpperCase()] || '🏃';
           return (
             <Grid item xs={12} sm={6} md={4} key={exercise}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" component="h2">
-                    {exercise.split('_').map(word => 
-                      word.charAt(0).toUpperCase() + word.slice(1)
-                    ).join(' ')}
-                  </Typography>
-                  <Typography color="textSecondary" gutterBottom>
-                    {currentCategory}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button
-                    size="small"
-                    color="primary"
-                    onClick={() => navigate(`/exercises/${exercise}?category=${currentCategory}`)}
-                  >
-                    VIEW DETAILS
-                  </Button>
-                </CardActions>
-              </Card>
+              <StyledCard
+                title={exercise.split('_').map(word =>
+                  word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ')}
+                subtitle={currentCategory}
+                icon={icon}
+                actionText="VIEW DETAILS"
+                onAction={() => navigate(`/exercises/${exercise}?category=${currentCategory}`)}
+              />
             </Grid>
           );
         })}
       </Grid>
-    </Container>
+    </PageContainer>
   );
 };
 

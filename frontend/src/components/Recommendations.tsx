@@ -16,7 +16,30 @@ import {
   Divider,
   Button,
 } from '@mui/material';
-import { generateWeeklyPlan } from '../data/recommendations';
+import { generateWeeklyPlan, exerciseLibrary } from '../data/recommendations';
+import type { Exercise, Meal } from '../data/recommendations';
+
+// Update type definitions to match actual data structure
+interface ExerciseLevel {
+  monday: Exercise[];
+  tuesday: Exercise[];
+  wednesday: Exercise[];
+  thursday: Exercise[];
+  friday: Exercise[];
+  saturday: Exercise[];
+  sunday: Exercise[];
+}
+
+interface ExerciseLibrary {
+  weightLoss: {
+    beginner: ExerciseLevel;
+    intermediate: ExerciseLevel;
+  };
+  muscleGain: {
+    beginner: ExerciseLevel;
+    intermediate: ExerciseLevel;
+  };
+}
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -136,6 +159,7 @@ const Recommendations = () => {
           <Tabs value={tabValue} onChange={handleTabChange}>
             <Tab label="Exercise Plan" />
             <Tab label="Nutrition Plan" />
+            <Tab label="Exercise Library" />
           </Tabs>
         </Box>
 
@@ -149,7 +173,7 @@ const Recommendations = () => {
                       {day.charAt(0).toUpperCase() + day.slice(1)}
                     </Typography>
                     <List>
-                      {weeklyPlan[day as keyof typeof weeklyPlan].exercises.map((exercise, index) => (
+                      {weeklyPlan[day as keyof typeof weeklyPlan].exercises.map((exercise: Exercise, index: number) => (
                         <React.Fragment key={index}>
                           <ListItem>
                             <ListItemText
@@ -192,37 +216,141 @@ const Recommendations = () => {
                       {day.charAt(0).toUpperCase() + day.slice(1)}
                     </Typography>
                     <List>
-                      {Object.entries(weeklyPlan[day as keyof typeof weeklyPlan].meals).map(([mealType, meal]) => (
-                        <React.Fragment key={mealType}>
-                          <ListItem>
-                            <ListItemText
-                              primary={`${mealType.charAt(0).toUpperCase() + mealType.slice(1)}: ${meal.name}`}
-                              secondary={
-                                <>
-                                  <Typography component="span" variant="body2">
-                                    Calories: {meal.calories} | Protein: {meal.protein}g | Carbs: {meal.carbs}g | Fats: {meal.fats}g
-                                  </Typography>
-                                  <br />
-                                  <Typography component="span" variant="body2">
-                                    Ingredients: {meal.ingredients.join(', ')}
-                                  </Typography>
-                                  <br />
-                                  <Typography component="span" variant="body2">
-                                    Instructions: {meal.instructions}
-                                  </Typography>
-                                </>
-                              }
-                            />
-                          </ListItem>
-                          <Divider />
-                        </React.Fragment>
-                      ))}
+                      {Object.entries(weeklyPlan[day as keyof typeof weeklyPlan].meals).map(([mealType, meal]) => {
+                        const mealData = meal as Meal;
+                        return (
+                          <React.Fragment key={mealType}>
+                            <ListItem>
+                              <ListItemText
+                                primary={`${mealType.charAt(0).toUpperCase() + mealType.slice(1)}: ${mealData.name}`}
+                                secondary={
+                                  <>
+                                    <Typography component="span" variant="body2">
+                                      Calories: {mealData.calories} | Protein: {mealData.protein}g | Carbs: {mealData.carbs}g | Fats: {mealData.fats}g
+                                    </Typography>
+                                    <br />
+                                    <Typography component="span" variant="body2">
+                                      Ingredients: {mealData.ingredients.join(', ')}
+                                    </Typography>
+                                    <br />
+                                    <Typography component="span" variant="body2">
+                                      Instructions: {mealData.instructions}
+                                    </Typography>
+                                  </>
+                                }
+                              />
+                            </ListItem>
+                            <Divider />
+                          </React.Fragment>
+                        );
+                      })}
                     </List>
                   </CardContent>
                 </Card>
               </Grid>
             ))}
           </Grid>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={2}>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
+              Exercise Library
+            </Typography>
+            <Grid container spacing={3}>
+              {Object.entries(exerciseLibrary as unknown as ExerciseLibrary).map(([goal, levels]) => (
+                <Grid item xs={12} key={goal}>
+                  <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ 
+                      textTransform: 'capitalize',
+                      color: 'primary.main',
+                      borderBottom: '2px solid',
+                      borderColor: 'primary.light',
+                      pb: 1,
+                      mb: 2
+                    }}>
+                      {goal.replace(/([A-Z])/g, ' $1').trim()}
+                    </Typography>
+                    {Object.entries(levels).map(([level, days]) => (
+                      <Box key={level} sx={{ mb: 3 }}>
+                        <Typography variant="subtitle1" sx={{ 
+                          fontWeight: 'bold',
+                          color: 'text.secondary',
+                          mb: 2,
+                          pl: 1
+                        }}>
+                          {level.charAt(0).toUpperCase() + level.slice(1)}
+                        </Typography>
+                        <Grid container spacing={2}>
+                          {Object.entries(days as ExerciseLevel).map(([day, exercises]) => (
+                            <Grid item xs={12} md={6} lg={4} key={day}>
+                              <Paper 
+                                elevation={1} 
+                                sx={{ 
+                                  p: 2,
+                                  height: '100%',
+                                  backgroundColor: 'background.default',
+                                  '&:hover': {
+                                    backgroundColor: 'action.hover',
+                                    transition: 'background-color 0.2s'
+                                  }
+                                }}
+                              >
+                                <Typography 
+                                  variant="subtitle2" 
+                                  sx={{ 
+                                    fontWeight: 'bold',
+                                    color: 'primary.main',
+                                    mb: 1,
+                                    textTransform: 'capitalize'
+                                  }}
+                                >
+                                  {day}
+                                </Typography>
+                                <List dense>
+                                  {exercises.map((exercise: Exercise, index: number) => (
+                                    <ListItem 
+                                      key={index}
+                                      sx={{
+                                        py: 1,
+                                        borderBottom: index < exercises.length - 1 ? '1px solid' : 'none',
+                                        borderColor: 'divider'
+                                      }}
+                                    >
+                                      <ListItemText
+                                        primary={
+                                          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                            {exercise.name}
+                                          </Typography>
+                                        }
+                                        secondary={
+                                          <Box sx={{ mt: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                              Sets: {exercise.sets} | Reps: {exercise.reps}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                              Rest: {exercise.rest}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                              {exercise.description}
+                                            </Typography>
+                                          </Box>
+                                        }
+                                      />
+                                    </ListItem>
+                                  ))}
+                                </List>
+                              </Paper>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </Box>
+                    ))}
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
         </TabPanel>
       </Paper>
     </Container>
