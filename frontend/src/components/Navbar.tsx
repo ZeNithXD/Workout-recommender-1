@@ -1,14 +1,29 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+  const navigate = useNavigate();
   return (
     <AppBar position="static">
       <Toolbar>
-        <FitnessCenterIcon sx={{ mr: 2 }} />
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <IconButton
+          edge="start"
+          color="inherit"
+          aria-label="logo"
+          sx={{ mr: 2 }}
+          onClick={() => navigate('/')}
+        >
+          <FitnessCenterIcon />
+        </IconButton>
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{ flexGrow: 1, cursor: 'pointer' }}
+          onClick={() => navigate('/')}
+        >
           AI Workout Recommender
         </Typography>
         <Box>

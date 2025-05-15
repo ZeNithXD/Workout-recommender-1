@@ -11,6 +11,7 @@ import Signup from './components/Signup';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Box, Button, Typography, Card, CardContent } from '@mui/material';
 import { Link } from 'react-router-dom';
+import ChatBot from './components/ChatBot';
 
 const theme = createTheme({
   palette: {
@@ -79,7 +80,9 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Router>
+          <Navbar />
           <AppRoutes />
+          <ChatBot />
         </Router>
       </AuthProvider>
     </ThemeProvider>
