@@ -13,11 +13,11 @@ const Home = () => (
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      py: 8,
+      py: 2,
     }}
   >
     <Fade in timeout={1200}>
-      <Container maxWidth="sm">
+      <Container maxWidth="sm" sx={{ mt: -6 }}>
         <Paper
           elevation={8}
           sx={{
