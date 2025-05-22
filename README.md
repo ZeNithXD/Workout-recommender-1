@@ -4,7 +4,6 @@ A modern, interactive fitness web application that provides personalized workout
 
 ## Features
 
-- **Authentication**: Secure login/signup with JWT (FastAPI backend, React frontend)
 - **User Profile**: Enter your weight, height, age, gender, goals, experience, and medical conditions
 - **Personalized Recommendations**: Get a one-week plan with daily exercises and Indian meal suggestions, tailored to your profile and goals
 - **Exercise Library**: Browse exercises by category and view detailed instructions
