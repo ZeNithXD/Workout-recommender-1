@@ -37,8 +37,8 @@ const Weather = () => {
         const interval = setInterval(getLocation, 300000);
         return () => clearInterval(interval);
     }, []);
-
-    // Real-time clock
+    
+    //real time clock
     useEffect(() => {
         const updateClock = () => {
             const now = new Date();

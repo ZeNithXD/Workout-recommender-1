@@ -19,7 +19,7 @@ import {
 import { generateWeeklyPlan, exerciseLibrary } from '../data/recommendations';
 import type { Exercise, Meal } from '../data/recommendations';
 
-// Update type definitions to match actual data structure
+//Update type definitions to match actual data structure
 interface ExerciseLevel {
   monday: Exercise[];
   tuesday: Exercise[];

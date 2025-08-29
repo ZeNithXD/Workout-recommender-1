@@ -66,7 +66,7 @@ const ChatBot: React.FC = () => {
 
       const data = await response.json();
       
-      // Add bot response
+      //Add bot response
       const botMessage: Message = {
         text: data.response,
         isUser: false,

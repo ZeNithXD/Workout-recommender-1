@@ -27,7 +27,7 @@ const Chat = () => {
         setIsLoading(true);
 
         try {
-            // Send message to backend
+            //Send message to backend
             const response = await axios.post('http://localhost:8000/api/chat', {
                 message: input
             });

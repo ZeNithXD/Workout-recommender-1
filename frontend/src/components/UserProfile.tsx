@@ -87,7 +87,7 @@ const UserProfile = () => {
       return;
     }
 
-    // Convert form data to numbers where needed
+    //Convert form data to numbers where needed
     const profileData = {
       ...formData,
       weight: Number(formData.weight),
